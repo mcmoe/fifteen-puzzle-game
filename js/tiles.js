@@ -52,7 +52,7 @@ function Tile(x, y, num) {
 				}
 			}
 			
-			console.log(direction);
+			//console.log(direction);
 			
 			
 			$('#tile-' + this.num).addClass('move-' +  direction);
@@ -69,9 +69,6 @@ function Tile(x, y, num) {
 			this.y = position.y;
 			this.offset = offsetEnd;
 			this.current = getPositionInNumber(this.x, this.y);
-			//addMove();
-			//checkGoal();
-//			$('#tile-' + this.num).removeClass('move' +  direction);
 		}
 
 	};
@@ -179,13 +176,4 @@ function getFreePosition(){
 			return positions[i];
 		}
 	}
-}
-
-function checkGoal(){
-	for(var i = 0; i < tiles.length; i++){
-		if(tiles[i].current != tiles[i].num){
-			return;
-		}
-	}	
-	win();
 }

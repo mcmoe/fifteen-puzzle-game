@@ -43,7 +43,7 @@ $(document).on('click', '.tile', function(){
 	if(!paused){
 		var num = $(this).attr('num');
 		var tile = getTile(num);
-		tile.move();
+		gameMove(tile);
 	}
 });
 
@@ -159,6 +159,7 @@ function resetContents(){
 	tiles = [];
 	positions = loadPositions();
 	generateTiles(positions);
+	shuffle();
 	time = 0;
 	moves = 0;
 	$('#score-point .num').html('0');
@@ -182,11 +183,7 @@ function generateTiles(positions){
 				tile = null;
 			}
 		}
-	}
-	setTimeout( function(){
-		shuffle();}
-		,1000 );
-	
+	}	
 }
 
 function shuffle(){
@@ -194,8 +191,7 @@ function shuffle(){
 	var directions = ['left', 'right', 'up', 'down'];
 	for(var i = 0; i < 200; i++){
 		current = directions[Math.floor(Math.random() * directions.length)];
-		console.log(current)
-		moveSwipedTile(current);
+		moveSwipedTileInternal(current);
 	}
 }
 
@@ -243,33 +239,11 @@ $(document).keydown(function(e) {
 		e.preventDefault(); 
     	switch(e.which) {
        		case 37: // left
-				console.log('left');
-					if(position.y < 4){
-						tile = getTileInPosition(position.x, position.y + 1);
-						tile.move();
-					}
-        	break;
         	case 38: // up
-				console.log('up');
-				if(position.x < 4){
-					tile = getTileInPosition(position.x + 1, position.y);
-					tile.move();
-				}
-        	break;
         	case 39: // right
-				console.log('right');
-				if(position.y > 1){
-					tile = getTileInPosition(position.x, position.y - 1);
-					tile.move();
-				}
-        	break;
         	case 40: // down
-				console.log('down');
-				if(position.x > 1){
-					tile = getTileInPosition(position.x - 1, position.y);
-					tile.move();
-				}
-        	break;	
+						moveSwipedTile(e.which);
+        	break;
 			case 27: // esc
 				console.log('esc');
 				pauseGame();
@@ -471,39 +445,37 @@ $(document).on('click', '#challenge-button', function(){
 
 });
 
+function getTileToMove(direction) {
+	var pos = getFreePosition();
+	if((direction === 37 || direction === 'left') && pos.y < 4){
+		return getTileInPosition(pos.x, pos.y + 1);
+	} else
+	if((direction === 38 || direction === 'up') && pos.x < 4){
+		return getTileInPosition(pos.x + 1, pos.y);
+	} else
+	if((direction === 39 || direction === 'right') && pos.y > 1){
+		return getTileInPosition(pos.x, pos.y - 1);
+	} else
+	if((direction === 40 || direction === 'down') && pos.x > 1){
+		return getTileInPosition(pos.x - 1, pos.y);	
+	} else
+		return null;
+}
+
+function getSwipedTileAndApply(direction, func) {
+	if((tile = getTileToMove(direction)) !== null) {
+			func(tile);
+		} else {
+			console.log('tile is null!!');
+		}
+}
+
+function moveSwipedTileInternal(direction) {
+	getSwipedTileAndApply(direction, (tile) => tile.move());
+}
 
 function moveSwipedTile(direction){
-	var pos = getFreePosition();
-	var tile = null;
-	switch(direction){
-		case 'left':
-			if(pos.y < 4){
-				tile = getTileInPosition(pos.x, pos.y + 1);
-				tile.move();
-			}
-			break;
-		case 'right':
-			if(pos.y > 1){
-				tile = getTileInPosition(pos.x, pos.y - 1);
-				tile.move();
-			}
-			break;
-		case 'up':
-			if(pos.x < 4){
-				tile = getTileInPosition(pos.x + 1, pos.y);
-				tile.move();
-			}
-			break;
-		case 'down':
-			if(pos.x > 1){
-				tile = getTileInPosition(pos.x - 1, pos.y);	
-				tile.move();
-			}
-			break;
-		default:
-			break;
-	}
-	
+	getSwipedTileAndApply(direction, (tile) => gameMove(tile));
 }
 
 function resizeWindowMobile(){
@@ -658,4 +630,19 @@ function loadAllChallenges(){
 			console.log("Error: " + err);
 		}
 	});
+}
+
+function gameMove(tile) {
+		tile.move();
+		addMove();
+		checkGoal();
+	}
+
+function checkGoal(){
+	for(var i = 0; i < tiles.length; i++){
+		if(tiles[i].current != tiles[i].num){
+			return;
+		}
+	}	
+	win();
 }
